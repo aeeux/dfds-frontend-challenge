@@ -1,0 +1,42 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+    provider = "prisma-client-js"
+    seed     = "ts-node prisma/seed.ts"
+}
+
+datasource db {
+    provider = "sqlite"
+    url      = env("DATABASE_URL")
+}
+
+model Vessel {
+    id        String   @id @default(cuid())
+    name      String
+    createdAt DateTime @default(now())
+    updatedAt DateTime @updatedAt
+    voyages   Voyage[]
+}
+
+model Voyage {
+    id                 String     @id @default(cuid())
+    portOfLoading      String
+    portOfDischarge    String
+    vesselId           String
+    scheduledDeparture DateTime
+    scheduledArrival   DateTime
+    vessel             Vessel     @relation(fields: [vesselId], references: [id])
+    createdAt          DateTime   @default(now())
+    updatedAt          DateTime   @updatedAt
+    unitTypes          UnitType[]
+}
+
+model UnitType {
+    id            String   @id 
+    name          String
+    defaultLength Float
+    createdAt     DateTime @default(now())
+    updatedAt     DateTime @updatedAt
+    voyages       Voyage[] @relation
+}

@@ -5,8 +5,7 @@ import { prisma } from "~/server/db";
  * @swagger
  * /api/voyage/create:
  *   post:
- *     tags:
- *       - Voyage
+ *     tags: [Voyage]
  *     summary: Creates a new voyage
  *     description: Creates a new voyage with specified details including departure, arrival, ports, vessel, and unit types.
  *     requestBody:
@@ -55,19 +54,19 @@ import { prisma } from "~/server/db";
  */
 const handler: NextApiHandler = async (
   req: NextApiRequest,
-  res: NextApiResponse<undefined>,
+  res: NextApiResponse,
 ) => {
   if (req.method === "POST") {
-    if (req.method === "POST") {
-      const {
-        departure,
-        arrival,
-        portOfLoading,
-        portOfDischarge,
-        vessel,
-        unitTypes,
-      } = req.body;
+    const {
+      departure,
+      arrival,
+      portOfLoading,
+      portOfDischarge,
+      vessel,
+      unitTypes,
+    } = req.body;
 
+    try {
       const createdVoyage = await prisma.voyage.create({
         data: {
           scheduledDeparture: departure,
@@ -81,12 +80,15 @@ const handler: NextApiHandler = async (
         },
       });
 
-      createdVoyage ? res.status(201) : res.status(500);
-      res.end();
-      return;
+      res.status(201).json(createdVoyage); // Return the created voyage as JSON -> so we can act upon successful requests in the UI - used by toast, to refresh voyage list & to close sheet component
+    } catch (error) {
+      console.error('Error creating voyage:', error);
+      res.status(500).json({ error: 'Internal server error' });
     }
-
-    res.status(405).end();
+  } else {
+    res.setHeader('Allow', ['POST']);
+    res.status(405).end(`Method ${req.method} not allowed`);
   }
 };
+
 export default handler;

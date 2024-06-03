@@ -1,4 +1,3 @@
-import * as React from "react";
 import { Badge } from "~/components/ui/badge";
 import {
   Command,
@@ -7,29 +6,52 @@ import {
   CommandList,
 } from "~/components/ui/command";
 import { Command as CommandPrimitive } from "cmdk";
+import {
+  useRef,
+  useState,
+  KeyboardEvent,
+  Dispatch,
+  SetStateAction,
+} from "react";
 
 type UnitType = { value: string; label: string };
 
 interface MultiSelectProps {
   unitTypes: UnitType[];
   selected: UnitType[];
-  setSelected: React.Dispatch<React.SetStateAction<UnitType[]>>;
+  setSelected: Dispatch<SetStateAction<UnitType[]>>;
 }
 
+/**
+ * MultiSelect component allows selecting multiple items from a list of unit types.
+ *
+ * @param {MultiSelectProps} props - The props for the MultiSelect component.
+ * @returns {JSX.Element} The rendered MultiSelect component.
+ */
 export function MultiSelect({
   unitTypes,
   selected,
   setSelected,
-}: MultiSelectProps) {
-  const inputRef = React.useRef<HTMLInputElement>(null);
-  const [inputValue, setInputValue] = React.useState("");
-  const [isOpen, setIsOpen] = React.useState(false);
-  const [hoveredBadge, setHoveredBadge] = React.useState<string | null>(null);
+}: MultiSelectProps): JSX.Element {
+  const inputRef = useRef<HTMLInputElement>(null);
+  const [inputValue, setInputValue] = useState("");
+  const [isOpen, setIsOpen] = useState(false);
+  const [hoveredBadge, setHoveredBadge] = useState<string | null>(null);
 
+  /**
+   * Handles unselecting a unit type.
+   *
+   * @param {UnitType} unitType - The unit type to unselect.
+   */
   const handleUnselect = (unitType: UnitType) => {
     setSelected((prev) => prev.filter((s) => s.value !== unitType.value));
   };
 
+  /**
+   * Handles selecting a unit type.
+   *
+   * @param {UnitType} unitType - The unit type to select.
+   */
   const handleSelect = (unitType: UnitType) => {
     if (!selected.find((s) => s.value === unitType.value)) {
       setSelected((prev) => [...prev, unitType]);
@@ -39,7 +61,12 @@ export function MultiSelect({
     }
   };
 
-  const handleKeyDown = (e: React.KeyboardEvent<HTMLDivElement>) => {
+  /**
+   * Handles key down events for the input.
+   *
+   * @param {KeyboardEvent<HTMLDivElement>} e - The keyboard event.
+   */
+  const handleKeyDown = (e: KeyboardEvent<HTMLDivElement>) => {
     const input = inputRef.current;
     if (input) {
       if (e.key === "Delete" || e.key === "Backspace") {
@@ -57,6 +84,7 @@ export function MultiSelect({
     }
   };
 
+  // Filter unit types based on input value and selected items
   const filteredUnitTypes = unitTypes.filter(
     (unitType) =>
       !selected.some((s) => s.value === unitType.value) &&

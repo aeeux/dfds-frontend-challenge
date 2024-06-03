@@ -168,8 +168,6 @@ export default function Home() {
                             <tr>
                               <th className="px-4 py-2">Name</th>
                               <th className="px-4 py-2">Default Length</th>
-                              <th className="px-4 py-2">Created At</th>
-                              <th className="px-4 py-2">Updated At</th>
                             </tr>
                           </thead>
                           <tbody>
@@ -178,18 +176,6 @@ export default function Home() {
                                 <td className="px-4 py-2">{unitType.name}</td>
                                 <td className="px-4 py-2">
                                   {unitType.defaultLength}
-                                </td>
-                                <td className="px-4 py-2">
-                                  {format(
-                                    new Date(unitType.createdAt),
-                                    TABLE_DATE_FORMAT,
-                                  )}
-                                </td>
-                                <td className="px-4 py-2">
-                                  {format(
-                                    new Date(unitType.updatedAt),
-                                    TABLE_DATE_FORMAT,
-                                  )}
                                 </td>
                               </tr>
                             ))}

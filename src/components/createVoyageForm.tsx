@@ -7,7 +7,6 @@ import { Button } from "~/components/ui/button";
 import { Input } from "~/components/ui/input";
 import { useMutation, useQueryClient, useQuery } from "@tanstack/react-query";
 import { fetchData } from "~/utils";
-import { VesselsType } from "~/pages/api/vessel/getAll";
 import { MultiSelect } from "./multiSelect";
 import { Dropdown } from "./dropdown";
 
@@ -34,6 +33,12 @@ interface CreateVoyageFormProps {
   onSuccess: () => void;
 }
 
+/**
+ * CreateVoyageForm component for creating a new voyage.
+ * @param {Object} props - Component props.
+ * @param {Function} props.onSuccess - Callback function to execute on successful form submission.
+ * @returns {JSX.Element}
+ */
 const CreateVoyageForm: React.FC<CreateVoyageFormProps> = ({ onSuccess }) => {
   const {
     register,
@@ -44,14 +49,12 @@ const CreateVoyageForm: React.FC<CreateVoyageFormProps> = ({ onSuccess }) => {
     resolver: zodResolver(voyageSchema),
   });
 
-  const queryClient = useQueryClient();
-
   // Fetching vessels
   const {
     data: vessels,
     isLoading: vesselsLoading,
     isError: vesselsError,
-  } = useQuery<VesselsType[]>({
+  } = useQuery<VesselType[]>({
     queryKey: ["vessels"],
     queryFn: () => fetchData("vessel/getAll"),
   });
@@ -66,16 +69,21 @@ const CreateVoyageForm: React.FC<CreateVoyageFormProps> = ({ onSuccess }) => {
     queryFn: () => fetchData("unitType/getAll"),
   });
 
+  // Error handling for data fetching
   useEffect(() => {
     if (vesselsError) console.error("Error fetching vessels");
     if (unitTypesError) console.error("Error fetching unit types");
   }, [vesselsError, unitTypesError]);
 
-  useEffect(() => {
-    if (vessels) {
-      console.log("Fetched vessels:", vessels);
-    }
-  }, [vessels]);
+  type VesselType = {
+    id: string;
+    name: string;
+  };
+
+  type UnitType = {
+    id: string;
+    name: string;
+  };
 
   // Transform unitTypes data to expected structure
   const unitTypes =
@@ -84,12 +92,12 @@ const CreateVoyageForm: React.FC<CreateVoyageFormProps> = ({ onSuccess }) => {
       label: unit.name,
     })) || [];
 
-  // The vesselOptions directly use the response structure
-  const vesselOptions = vessels || [];
-
-  useEffect(() => {
-    console.log("Transformed vessel options:", vesselOptions);
-  }, [vesselOptions]);
+  // Transform vessel data to expected structure
+  const vesselOptions =
+    vessels?.map((vessel) => ({
+      value: vessel.id,
+      label: vessel.name,
+    })) || [];
 
   const [selectedVessel, setSelectedVessel] = useState("");
   const [selectedUnitTypes, setSelectedUnitTypes] = useState<
@@ -98,29 +106,29 @@ const CreateVoyageForm: React.FC<CreateVoyageFormProps> = ({ onSuccess }) => {
   const [portOfLoading, setPortOfLoading] = useState("");
   const [portOfDischarge, setPortOfDischarge] = useState("");
 
+  // Set selected vessel value in form data
   useEffect(() => {
     setValue("vessel", selectedVessel);
   }, [selectedVessel, setValue]);
 
+  // Set selected unit types value in form data
   useEffect(() => {
-    setValue(
-      "unitTypes",
-      selectedUnitTypes.map((ut) => ut.value),
-    );
+    const unitTypeValues = selectedUnitTypes.map((ut) => ut.value);
+    if (unitTypeValues.length > 0) {
+      setValue("unitTypes", unitTypeValues as [string, ...string[]]);
+    } else {
+      setValue("unitTypes", [] as unknown as [string, ...string[]]); // Set to an empty array if no unit types are selected
+    }
   }, [selectedUnitTypes, setValue]);
 
   // Creating a new voyage
   const createVoyageMutation = useMutation({
     mutationFn: async (data: VoyageFormData) => {
-      console.log("Submitting data:", data); // Print the submission data for debugging
       const response = await fetch("/api/voyage/create", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(data),
       });
-
-      const responseText = await response.text();
-      console.log("Raw response:", responseText);
 
       if (!response.ok) {
         throw new Error(
@@ -128,14 +136,9 @@ const CreateVoyageForm: React.FC<CreateVoyageFormProps> = ({ onSuccess }) => {
         );
       }
 
-      try {
-        return JSON.parse(responseText);
-      } catch (error) {
-        throw new Error(`Failed to parse response: ${error.message}`);
-      }
+      return response.json();
     },
     onSuccess: () => {
-      console.log("Voyage created successfully");
       onSuccess(); // Call the onSuccess callback
     },
     onError: (error) => {
@@ -143,17 +146,22 @@ const CreateVoyageForm: React.FC<CreateVoyageFormProps> = ({ onSuccess }) => {
     },
   });
 
+  // Handle form submission
   const onSubmit = (data: VoyageFormData) => {
     data.departure = new Date(data.departure).toISOString();
     data.arrival = new Date(data.arrival).toISOString();
 
     // Ensure these values are set correctly in the form data
     data.vessel = selectedVessel;
-    data.unitTypes = selectedUnitTypes.map((ut) => ut.value);
+    data.unitTypes = selectedUnitTypes.map((ut) => ut.value) as [
+      string,
+      ...string[],
+    ];
 
     createVoyageMutation.mutate(data);
   };
 
+  // Handle port of loading change and set port of discharge accordingly
   const handlePortOfLoadingChange = (selectedPort: string) => {
     setPortOfLoading(selectedPort);
     setValue("portOfLoading", selectedPort);

@@ -76,8 +76,8 @@ const CreateVoyageForm: React.FC<CreateVoyageFormProps> = ({ onSuccess }) => {
   }, [vesselsError, unitTypesError]);
 
   type VesselType = {
-    id: string;
-    name: string;
+    value: string;
+    label: string;
   };
 
   type UnitType = {
@@ -95,8 +95,8 @@ const CreateVoyageForm: React.FC<CreateVoyageFormProps> = ({ onSuccess }) => {
   // Transform vessel data to expected structure
   const vesselOptions =
     vessels?.map((vessel) => ({
-      value: vessel.id,
-      label: vessel.name,
+      value: vessel.value,
+      label: vessel.label,
     })) || [];
 
   const [selectedVessel, setSelectedVessel] = useState("");

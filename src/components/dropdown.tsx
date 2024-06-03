@@ -8,6 +8,7 @@ import {
   DropdownMenuTrigger,
 } from "./ui/dropdown-menu";
 import { Button } from "./ui/button";
+import { useEffect } from "react";
 
 interface DropdownProps {
   label: string;
@@ -16,15 +17,20 @@ interface DropdownProps {
   setSelectedItem: (item: string) => void;
 }
 
+/**
+ * Dropdown component for selecting an item from a list.
+ * @param {DropdownProps} props - Component props.
+ * @returns {JSX.Element}
+ */
 export function Dropdown({
   label,
-  items,
+  items = [],
   selectedItem,
   setSelectedItem,
 }: DropdownProps) {
-  React.useEffect(() => {
+  useEffect(() => {
     if (!selectedItem && items.length > 0) {
-      setSelectedItem(items[0].value);
+      setSelectedItem(items[0]?.value || "");
     }
   }, [items, selectedItem, setSelectedItem]);
 
